@@ -30,7 +30,7 @@ jobs:
        key: ${{ secrets.SSH_PRIVATE_KEY }}  # Your SSH private key (stored as a secret)
        script: |
           docker stop $(docker ps -aq)
-          docker rm $(docekr ps -aq)
-          docekr rmi $(docker images -q)
+          docker rm $(docker ps -aq)
+          docker rmi $(docker images -q)
           sudo docker pull ${{ secrets.DOCKER_USERNAME }}/app-flask
           sudo docker run -d -p 80:80 --name my-app ${{ secrets.DOCKER_USERNAME }}/app-flask
