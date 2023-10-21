@@ -1,0 +1,33 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build the Docker image
+      run: docker build . --file Dockerfile --tag hello-world
+    - name: Log in to Docker Hub
+      run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASS }}
+    - name: Push the Docker image to Docker Hub
+      run: |
+        docker tag hello-world ${{ secrets.DOCKER_USERNAME }}/app-flask
+        docker push ${{ secrets.DOCKER_USERNAME }}/app-flask
+    - name: Deploy Docker Container to EC2
+      uses: appleboy/ssh-action@master
+      with:
+       host: ${{ secrets.EC2_INSTANCE_IP }}  # Replace with your EC2 instance IP or DNS
+       username: ubuntu  # The SSH username for your EC2 instance
+       key: ${{ secrets.SSH_PRIVATE_KEY }}  # Your SSH private key (stored as a secret)
+       script: |
+          sudo docker pull ${{ secrets.DOCKER_USERNAME }}/app-flask
+          sudo docker run -d -p 80:80 --name my-app ${{ secrets.DOCKER_USERNAME }}/app-flask
